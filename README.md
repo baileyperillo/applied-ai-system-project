@@ -44,5 +44,20 @@ pip install -r requirements.txt
 7. Refine UML so it matches what you actually built.
 
 
-Summary
+## Summary
 Application allows owner to put their information and allows them to add multiple pets and their information, such as their name, and type of animal. The user can then create tasks and include details such as time duration, priority, and repeat frequency. The tasks can also be assigned to a specific pet. The tasks can then be put in a list and organized in different ways, such as priority, time, time it was added, etc. The owner can then declare when a task is finished. There is also a feature that can warn the owner of task scheduling conflicts.
+
+## "Testing PawPal+".
+
+Summary of my tests: ...
+This has my confidence based on the systems results. It collected 28 items and all 28 had passed in 0.1s.
+
+# UML diagrams:
+<a href="" target="_blank"><img src='' title='PawPal App' width='' alt='PawPal App' class='center-block' /></a>.
+
+# Demo Screenshots
+<a href="" target="_blank"><img src='' title='PawPal App' width='' alt='PawPal App' class='center-block' /></a>.
+
+<a href="" target="_blank"><img src='' title='PawPal App' width='' alt='PawPal App' class='center-block' /></a>.
+
+<a href="" target="_blank"><img src='' title='PawPal App' width='' alt='PawPal App' class='center-block' /></a>.
