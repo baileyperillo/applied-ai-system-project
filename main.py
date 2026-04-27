@@ -1,4 +1,4 @@
-from pawpal_system import Task, Pet, Owner, Scheduler
+from pawpal_system import Task, Pet, Owner, Scheduler, DecisionLogger, EmbeddingManager
 from datetime import datetime
 
 #This is your temporary "testing ground" to 
@@ -57,3 +57,30 @@ else:
     print("✅ No conflicts detected!")
 
 print("=" * 50)
+
+# --- DECISION LOGGER TEST ---
+print("\n📝 TESTING DECISION LOGGER...\n")
+logger = DecisionLogger()
+
+# Test logging different types of decisions
+logger.log_decision(
+    request="Schedule grooming for Mochi",
+    proposal="Schedule grooming for Mochi on 2024-01-20 at 14:00",
+    outcome="approved",
+    final_task="Grooming on 2024-01-20 at 14:00"
+)
+
+logger.log_decision(
+    request="Add feeding task for Luna",
+    proposal="Add feeding task for Luna at 07:00 daily",
+    outcome="edited",
+    final_task="Feed Luna at 08:00 daily"
+)
+
+logger.log_decision(
+    request="Schedule playtime for Mochi",
+    proposal="Schedule playtime for Mochi at 16:00 daily",
+    outcome="rejected"
+)
+
+print("\n✅ Decision logging test completed!")

@@ -1,0 +1,7 @@
+date,request,proposal,outcome,final_task
+2024-01-01,"Schedule vet appointment for Mochi","Schedule vet appointment for Mochi on 2024-01-15 at 10:00","approved","Vet check-up on 2024-01-15 at 10:00"
+2024-01-02,"Add daily feeding task for Luna","Add feeding task for Luna at 08:00 daily","edited","Feed Luna at 08:00 daily"
+2024-01-03,"Schedule grooming for Mochi","Schedule grooming for Mochi on 2024-01-20 at 14:00","rejected",""2026-04-27,Schedule grooming for Mochi,Schedule grooming for Mochi on 2024-01-20 at 14:00,approved,Grooming on 2024-01-20 at 14:00
+2026-04-27,Add feeding task for Luna,Add feeding task for Luna at 07:00 daily,edited,Feed Luna at 08:00 daily
+2026-04-27,Schedule playtime for Mochi,Schedule playtime for Mochi at 16:00 daily,rejected,
+2026-04-27,Test request,Test proposal,approved,Test final task

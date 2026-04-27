@@ -3,8 +3,11 @@
 #Created by CoPilot
 
 from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import Optional, List, Tuple
 from datetime import datetime, timedelta
+import csv
+import numpy as np
+from sentence_transformers import SentenceTransformer
 
 
 # -----------------------------------------------------------------------
@@ -340,7 +343,7 @@ class Scheduler:
         
         return warnings
 
-    def check_conflicts_and_add_task(self, pet: Pet, task: Task) -> tuple[Task, List[str]]:
+    def check_conflicts_and_add_task(self, pet: Pet, task: Task) -> Tuple[Task, List[str]]:
         """Add a task to a pet and return any scheduling conflicts.
         
         Safe wrapper that adds task and reports conflicts without crashing.
@@ -355,6 +358,130 @@ class Scheduler:
         pet.add_task(task)
         conflicts = self.detect_scheduling_conflicts()
         return task, conflicts
+
+
+@dataclass
+class EmbeddingManager:
+    """Manages vector embeddings for the decision corpus used in RAG retrieval.
+    
+    This class handles the conversion of decision text into vector embeddings
+    and maintains the embeddings file for efficient similarity search.
+    """
+    
+    csv_file: str = "decisions.csv"  # Path to the decisions CSV file
+    embeddings_file: str = "decisions_embeddings.npy"  # Path to the embeddings numpy file
+    model_name: str = "all-MiniLM-L6-v2"  # Pre-trained sentence transformer model
+    
+    def __post_init__(self):
+        """Initialize the sentence transformer model."""
+        self.model = SentenceTransformer(self.model_name)
+    
+    def load_decisions(self) -> List[dict]:
+        """Load all decisions from the CSV file.
+        
+        Returns:
+            List of decision dictionaries with keys: date, request, proposal, outcome, final_task
+        """
+        decisions = []
+        try:
+            with open(self.csv_file, 'r', newline='', encoding='utf-8') as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    decisions.append(row)
+        except FileNotFoundError:
+            # If CSV doesn't exist yet, return empty list
+            pass
+        return decisions
+    
+    def create_embedding_text(self, decision: dict) -> str:
+        """Create the text to embed from a decision dictionary.
+        
+        Combines request, proposal, and outcome for comprehensive similarity matching.
+        
+        Args:
+            decision: Dictionary containing decision data
+            
+        Returns:
+            Combined text string for embedding
+        """
+        return f"Request: {decision['request']}\nProposal: {decision['proposal']}\nOutcome: {decision['outcome']}"
+    
+    def generate_embeddings(self, decisions: List[dict]) -> np.ndarray:
+        """Generate embeddings for a list of decisions.
+        
+        Args:
+            decisions: List of decision dictionaries
+            
+        Returns:
+            Numpy array of embeddings with shape (num_decisions, embedding_dim)
+        """
+        if not decisions:
+            # Return empty array with correct shape
+            return np.empty((0, self.model.get_sentence_embedding_dimension()))
+        
+        embedding_texts = [self.create_embedding_text(decision) for decision in decisions]
+        embeddings = self.model.encode(embedding_texts, show_progress_bar=False)
+        return embeddings
+    
+    def update_embeddings_file(self) -> None:
+        """Update the embeddings file with current decisions from CSV.
+        
+        Loads all decisions, generates fresh embeddings, and saves to numpy file.
+        This should be called whenever decisions are added to maintain consistency.
+        """
+        decisions = self.load_decisions()
+        embeddings = self.generate_embeddings(decisions)
+        
+        # Save embeddings to file
+        np.save(self.embeddings_file, embeddings)
+        
+        print(f"✅ Updated embeddings: {len(decisions)} decisions, shape {embeddings.shape}")
+
+
+@dataclass
+class DecisionLogger:
+    """Logs past task decisions (approved, edited, rejected) to CSV for RAG retrieval.
+    
+    This class maintains a persistent record of all AI-generated proposals and user responses,
+    building a corpus that improves future recommendations through similarity-based retrieval.
+    """
+    
+    csv_file: str = "decisions.csv"  # Path to the decisions CSV file
+    embedding_manager: EmbeddingManager = field(default_factory=EmbeddingManager)  # Manages embeddings
+    
+    def log_decision(self, request: str, proposal: str, outcome: str, final_task: str = "") -> None:
+        """Log a single decision to the CSV file.
+        
+        Appends a new row to decisions.csv with the current timestamp and decision details.
+        This creates the training data for the RAG retrieval system.
+        
+        Args:
+            request: The user's original task request (e.g., "Schedule vet appointment")
+            proposal: The AI-generated proposal (e.g., "Schedule on 2024-01-15 at 10:00")
+            outcome: User's response - "approved", "edited", or "rejected"
+            final_task: The final task description if approved/edited, empty if rejected
+        """
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        
+        # Prepare the new row
+        new_row = {
+            'date': current_date,
+            'request': request,
+            'proposal': proposal,
+            'outcome': outcome,
+            'final_task': final_task
+        }
+        
+        # Append to CSV file
+        with open(self.csv_file, 'a', newline='', encoding='utf-8') as csvfile:
+            fieldnames = ['date', 'request', 'proposal', 'outcome', 'final_task']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writerow(new_row)
+        
+        print(f"✅ Logged decision: {outcome} - {request}")
+        
+        # Update embeddings after logging decision
+        self.embedding_manager.update_embeddings_file()
 
 
 # -----------------------------------------------------------------------
