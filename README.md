@@ -39,64 +39,15 @@ The final app after updates should:
 
  ## Architecture Overview
  ![alt text](<Pet Owner Task Management-2026-04-27-065215.png>)
- PawPal+ System Architecture Summary
+ (Mermaid diagram in [text](reflection.md) )
 
 The system is organized around a two-pipeline design that separates scheduling from AI-assisted task proposals.
 
-Built (current)
+Built (previous)
 The owner enters pet info, tasks, and constraints through a Streamlit UI. A backend data model (Owner → Pet → Task) feeds a Scheduler that sorts, filters, handles recurrences, and detects conflicts — outputting a clean daily plan back to the owner. An automated test suite (28 tests) validates the scheduler independently.
 
 Next (RAG pipeline)
 When the owner submits a new task request, a Retriever searches a Decision Log corpus of past approved, edited, and rejected decisions using vector similarity. The top matches are injected as few-shot examples into a prompt sent to Claude (the Agent), which generates a grounded proposal with a rationale. That proposal is surfaced to the owner as an Evaluator step — they confirm, edit, or reject it before anything touches the data model. Every decision is logged back to the corpus, so retrieval improves over time.
-
-Mermaid Diagram (using Claude)
-
- Plan:
- implement RAG feature, agentic workflow later
-
- graph TD
-    OWNER(["Pet Owner"])
-
-    subgraph BUILT["✅ BUILT"]
-        MODEL["Data Model\nOwner · Pet · Task"]
-        SCHEDULER["Scheduler\nsort · filter · conflicts · recurrence"]
-    end
-
-    subgraph RAG_PIPE["🔜 NEXT — RAG Pipeline"]
-        RETRIEVER["Retriever\nvector similarity search"]
-        CORPUS[("Decision Log\napproved · edited · rejected")]
-        AGENT["Agent\nClaude LLM\nproposal + rationale"]
-    end
-
-    PLAN_OUT["Daily Schedule\nw/ rationale"]
-
-    subgraph HUMAN_REVIEW["Human-in-the-Loop"]
-        EVALUATOR["Evaluator\nOwner: Confirm · Edit · Reject"]
-    end
-
-    subgraph AUTO_TESTING["Automated Testing"]
-        TESTER["Tester\n28 passing tests"]
-    end
-
-    FUTURE(["Agentic Workflow 🔮\nplanned later"])
-
-    OWNER -->|"pets · tasks · constraints"| MODEL
-    OWNER -->|"new task request"| RETRIEVER
-
-    MODEL --> SCHEDULER
-    SCHEDULER -->|"sorted, conflict-free plan"| PLAN_OUT
-    PLAN_OUT --> OWNER
-
-    RETRIEVER <-->|"semantic search"| CORPUS
-    RETRIEVER -->|"request + few-shot examples"| AGENT
-    AGENT -->|"grounded proposal"| EVALUATOR
-
-    EVALUATOR -->|"log decision"| CORPUS
-    EVALUATOR -->|"confirmed task"| MODEL
-
-    TESTER -.->|"validates"| SCHEDULER
-
-    RAG_PIPE -.->|"foundation for"| FUTURE
 
 
 ## Getting started
@@ -106,64 +57,41 @@ Mermaid Diagram (using Claude)
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-python3 -m pip install scikit-learn
 streamlit run app.py
+
 ```
+Before running, you need to create a file named .env in the root of the project folder and add an Anthropic API key:
+    ANTHROPIC_API_KEY=your_key_here
+
+The app reads this automatically on startup via load_dotenv().
 
 ### Suggested workflow
 
 1. Read the scenario carefully and identify requirements and edge cases.
-2. Think and decide on a feature that fits into one of the requirements (RAG, Agentic Workflow, Fine-Tuned or Specialized Model, Reliability or Testing System)
+2. Think and decide on a feature that fits into one of the requirements (**RAG**, Agentic Workflow, Fine-Tuned or Specialized Model, Reliability or Testing System)
 3. Create/ Draft the Architecture with a System Diagram (including the current features of the project and the planned)
 4. Create a README.md to log the plan and current features (original project, new project summary, architecture system design, Setup Instructions, etc. )
 4. Implement RAG logic in small increments.
 5. Add tests to verify key behaviors.
 6. Connect your logic to the Streamlit UI in `app.py`.
-7. Refine UML so it matches what you actually built.
 
-## Tradeoffs:
-Because the feature is RAG instead of agentic workflow, the program would not self-check itself
 
 
 ## "Testing PawPal++".
 
 Summary of my tests: ...
+Used multiple tests to test reliability of features. Used mainly human evaluation to find issues. 30 unit tests passed successfully. Error handling and warning handling were implemented.
 
 To Do List:
 [x] comment out AI Task Proposal (used for debugging)
 [x] remove prompt display in AI-Assisted Task Request
 [x] make sure new task that is confirmed is displayed on task list; tasks aren't added until I press on add task manually
 [x] make sure proposed task has time, date, duration, frequency, priority even without prompted
-[ ] make sure AI runs again if task is rejected
-Think about if the reject should do anything: just record response or change something?
-[ ] fix or remove the number of tasks in manage pets
+[ ] make sure AI runs again if task is rejected --Think about if the reject should do anything: just record response or change something?
+[ ] fix or remove the number of tasks in manage pets (not updating) -- fixed
 [x] add a way to delete/ edit tasks in "Current Tasks" or "Schedule"
 [x]add colors on the scheduling conflicts
-[ ] mark tasks as completed. They should delete after in schedule but be labeled as complete on "Current Tasks" list
+[x] mark tasks as completed. They could delete after in schedule but be labeled as complete on "Current Tasks" list
 [ ] add colors or symbols to priority
-
-## Problems
-- generated task isn't specific - no time or date
-- generated task won't show in task list once confirmed
-- nothing happens after generated task is rejected; should propose again
-- start time is not input by user so there will always be scheduling conflicts
-- if I add another task in the AI Task proposal, it would not show in the to edit text box
-- rejected first generated response then tried again. Gave same response
-- generating new task after not rejecting or confirming old task will keep old task
-
-
-## Future Plans
-- make feature agentic workflow so it can check itself and fix itself in a loop
-- when generated response is rejected, AI will generate a new response (agentic)
-- show a monthly calender of all the tasks already scheduled
-- visually appealing list
-- visual calender
-- make owner info important? (depends on if this is used for personal or business)
-- be able to prompt for editing tasks
-- edit tasks on schedule. If completed, can press complete to remove from schedule and mark as complete on current tasks
-- find a way to schedule certain tasks without scheduling conflicts (ex: I want to schedule walks for my two dogs at the same time)
-- warn user of scheduling conflict beforehand?
-- make the shedule more interactive
-
 
 

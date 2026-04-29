@@ -2,161 +2,55 @@
 
 ## 1. System Design
 
-Original Design:
-There should be a class named Ticket. It should have attributes:
-string owner
-string pet name
-string dogDescription?
-string task_title
-string taskDescription?
-int time = how long it takes to do task/ time owner should take to complete
-OR
-int timeHours = how many hours
-int timeMinutes = how many minutes it
+Mermaid Diagram (using Claude)
 
-int priority = 1,2,3 OR string priority = high, med, low
+ Plan:
+ implement RAG feature, agentic workflow later
 
-Methods:
-enter owner info = enter owner info (owner + pet + petDescription?)
-edit owner info = selected info can change the existing info and save
-enter task = enter task (task title, taskDescription?, timeDuration, priority)
-edit task = edit info in selected task and save
-task organizer = organizes the task based on priority or based on time entered
-completed = task is erased from list when selected as completed
+ graph TD
+    OWNER(["Pet Owner"])
 
-After modifications, Prompt:
-I am designing a pet care app with the four classes: ownerInfo, Task, List, and another class I don't know, maybe petInfo. 
-ownerInfo is how the owner can enter their information along with their pet and number of pets. The user could also edit their info.
+    subgraph BUILT["✅ BUILT"]
+        MODEL["Data Model\nOwner · Pet · Task"]
+        SCHEDULER["Scheduler\nsort · filter · conflicts · recurrence"]
+    end
 
-petInfo is the info the user puts for their pet. It should include pet name, type of animal. The usesr should be able to add multiple pets and edit this information.
+    subgraph RAG_PIPE["🔜 NEXT — RAG Pipeline"]
+        RETRIEVER["Retriever\nvector similarity search"]
+        CORPUS[("Decision Log\napproved · edited · rejected")]
+        AGENT["Agent\nClaude LLM\nproposal + rationale"]
+    end
 
-Task should is the task the owner can make, such as walk the dog. Each task should have time duration it would take to complete task and priority.
+    PLAN_OUT["Daily Schedule\nw/ rationale"]
 
-List should show the list of tasks. Can add the which pet the task is for if they want. The List should be organized by priority or when they were inputted.
+    subgraph HUMAN_REVIEW["Human-in-the-Loop"]
+        EVALUATOR["Evaluator\nOwner: Confirm · Edit · Reject"]
+    end
 
-Use Mermaid Live Demo to create a Mermaid.js UML class diagram
+    subgraph AUTO_TESTING["Automated Testing"]
+        TESTER["Tester\n28 passing tests"]
+    end
 
+    FUTURE(["Agentic Workflow 🔮\nplanned later"])
 
-UML Diagram (created by Claude)
-classDiagram
-    class OwnerInfo {
-        +String ownerName
-        +String email
-        +String phone
-        +int numberOfPets
-        +enterInfo()
-        +editInfo()
-        +addPet()
-        +removePet()
-    }
+    OWNER -->|"pets · tasks · constraints"| MODEL
+    OWNER -->|"new task request"| RETRIEVER
 
-    class PetInfo {
-        +int petId
-        +String petName
-        +String animalType
-        +String breed
-        +int age
-        +enterPetInfo()
-        +editPetInfo()
-    }
+    MODEL --> SCHEDULER
+    SCHEDULER -->|"sorted, conflict-free plan"| PLAN_OUT
+    PLAN_OUT --> OWNER
 
-    class Task {
-        +int taskId
-        +String taskName
-        +String description
-        +int duration
-        +String priority
-        +Date dateAdded
-        +createTask()
-        +editTask()
-        +deleteTask()
-    }
+    RETRIEVER <-->|"semantic search"| CORPUS
+    RETRIEVER -->|"request + few-shot examples"| AGENT
+    AGENT -->|"grounded proposal"| EVALUATOR
 
-    class TaskList {
-        +List~Task~ tasks
-        +addTask()
-        +removeTask()
-        +sortByPriority()
-        +sortByDateAdded()
-        +displayList()
-    }
+    EVALUATOR -->|"log decision"| CORPUS
+    EVALUATOR -->|"confirmed task"| MODEL
 
-    OwnerInfo "1" --> "0..*" PetInfo : owns
-    OwnerInfo "1" --> "1" TaskList : has
-    TaskList "1" --> "0..*" Task : contains
-    Task "0..1" --> "0..1" PetInfo : assigned to
+    TESTER -.->|"validates"| SCHEDULER
 
+    RAG_PIPE -.->|"foundation for"| FUTURE
 
-
-# Copilot UML Diagram
-UML Diagram (created by CoPilot) - used
-**CoPilot asked for more clarification
-OwnerInfo:
-    - name
-    - numberOfPets
-    -     classDiagram
-        class OwnerInfo {
-            -int ownerID
-            -string name
-            -string email
-            -string phone
-            -int numberOfPets
-            +addOwnerInfo()
-            +editOwnerInfo()
-        }
-        
-        class PetInfo {
-            -int petID
-            -string petName
-            -string animalType
-            -string breed [optional]
-            -int age [optional]
-            +addPet()
-            +editPet()
-        }
-        
-        class Task {
-            -int taskID
-            -string taskName
-            -int duration
-            -int priority
-            -datetime createdAt
-            -PetInfo assignedPet [optional]
-            +createTask()
-            +editTask()
-            +deleteTask()
-        }
-        
-        class List {
-            -int listID
-            -string listName
-            -string sortBy
-            +addTask()
-            +removeTask()
-            +getTasks()
-            +updateSortOrder()
-        }
-        
-        OwnerInfo "1" --> "many" PetInfo : owns
-        OwnerInfo "1" --> "many" Task : creates
-        OwnerInfo "1" --> "many" List : manages
-        Task "many" --> "many" PetInfo : assigns to
-        List "1" --> "many" Task : contains
-
-
-**a. Initial design**
-
-Three things user should be able to do:
-1. user should enter info on themselves and their pet
-2. user can enter their task, time duration, and priority and see it displayed
-3. user can edit task with the time duration to do task and priority
-
-
-- Briefly describe your initial UML design.
-- What classes did you include, and what responsibilities did you assign to each?
-
-The UML diagram has 4 classes. OwnerInfo, PetInfo, Task, List. Owner can own many Pets and make many Lists and Tasks. All Pets have one Owner and can have a List assigned to them. A Task is created by the Owner and can be assigned a time duration, priority, and Pet as a list if it is specific to it. A List is made up of Tasks and a list of Tasks can be assigned to a specific Pet.
-OwnerInfo is how the user enters their information along with their pets. they can edit their info. PetInfo is the information the owner enters about their pet. It can be edited. The Task is what the owner wants to complete. It should have the priority, the time duration it would take to complete it, and optionally the pet it may be assigned to. It can be edited. The List should organize the group of tasks, whether it is assigned to specific pets or not, depending on priority or order of input.
 
 **b. Design changes**
 
@@ -179,15 +73,27 @@ There was also a validation concern according the the AI, where everything input
 - What constraints does your scheduler consider (for example: time, priority, preferences)?
 - How did you decide which constraints mattered most?
 
-Some constraints that the scheduler considers is the start time, duration or how long the task takes, the date it's due, and scheduling conflicts such as if two tasks share the same start time and due date. The scheduler also has priority and frequency it repeats, and status, completed or not.
-I followed the description of the application to know some of the things I needed to add constraints. Time mattered and priority mattered the most because of how many times those things are considered when making or deciding on tasks.
+
+Time, date, duration, and priority are greatly considered when making tasks for the schedule and finding conflicts. Time and priority was the constraint that mattered the most due to scheduling a task in the next available time, and organizing the list based on priority. Frequency and completion status were also considered but to a much less degree.
+
+- The scheduler doesn't allow for allow intentional same-time tasks. An example could be making a task to walk two dogs at the same time.
+- Tasks don't take into account other factors when suggested (time traveling, overtime, etc.) 
 
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
 - Why is that tradeoff reasonable for this scenario?
 
-A tradeoff was detecting scheduling conflicts by the exact time rather than time overlap, such as if a tasks take 1 hour and one starts 30 mins after another one. This is a reasonable tradeoff because it is can be checked easily with the attributes we have compared to time overlap where you have count the more exact timing it conflicts. It's something some owners don't really think about.
+## Tradeoffs:
+- Because the feature is RAG instead of agentic workflow, the program would not self-check itself or correct when user rejects generated tasks
+- AI only looks at the last 3 tasks from user history similar to the input. This is dependent on how long the history is.
+- relies on Claude API for generated tasks, expecially time and date
+- schedule only displays
+- memory won't be saved if refresh app
+- Long history can slow down decision making (except for decisions.csv, decisions_embeddings.npy)
+- Dual object representation: Task is stored in two different ways, possibly causing problems in the future.
+
+For the first tradeoff, I wanted eventually change this feature from RAG to agentic workflow so it can correct it's answer before giving an answer to the user and adjusting it's answer based on the user's choices previous tasks. Right now, the scheduler only finds best availabile space that is similar to the last 3 similar previous tasks from the user's history.
 
 
 ---
@@ -198,6 +104,10 @@ A tradeoff was detecting scheduling conflicts by the exact time rather than time
 
 - How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
 - What kinds of prompts or questions were most helpful?
+
+I used AI for brainstorming, such as understanding what each required feature does and ideas on how it can it be implemented. I used AI to design a diagram. I used AI to create steps to implement, then implement those steps. I used AI solve debugging issues or changes I wanted to create.
+I asked prompts asking for definitions and how things could be implemented, such as what is RAG, how does it work, how can it be implemented in my project (give me 3 ideas), how this idea differnt from agentic workflow. I gave it prompts when debugging like "what are the differnce between these two functions or features? How does this work? Do I need to use an API for this?". I then used it to help me debug by giving descriptions about what I want "I want the comment out this function since it's used for debugging but is redundent in the application. I don't want to see the prompts in the function but print them in the console. Add an error handling this can't be prompted". 
+
 
 **b. Judgment and verification**
 
@@ -213,6 +123,19 @@ A tradeoff was detecting scheduling conflicts by the exact time rather than time
 - What behaviors did you test?
 - Why were these tests important?
 
+Use human evaluation to test features and try to break app.Features were implemented but when challenged, Multiple problems arose. This included redundent features and features not working when conflicting. Automated tests (unit tests) were done in #tests/test_pawpal.py, testing (add_task(), mark_complete()), recurrence tests when looking at user's data, filtering when organizing by different catagories, and conflict detection with scheduling conflicts. Logging and Error Handling was done if missing information when adding taskss, or giving warnings for scheduling conflicts.
+
+## Problems that I came across
+- generated task isn't specific - no time or date
+- generated task won't show in task list once confirmed
+- nothing happens after generated task is rejected; should propose again
+- start time is not input by user so there will always be scheduling conflicts
+- if I add another task in the AI Task proposal, it would not show in the to edit text box
+- rejected first generated response then tried again. Gave same response
+- generating new task after not rejecting or confirming old task will keep old task
+
+**See checklist at bottom of [text](README.md)**
+
 **b. Confidence**
 
 - How confident are you that your scheduler works correctly?
@@ -225,11 +148,34 @@ A tradeoff was detecting scheduling conflicts by the exact time rather than time
 **a. What went well**
 
 - What part of this project are you most satisfied with?
+I am satisfied the overall application so far. I think it is at a place that I am happy to submit even though I have a bunch of ideas for the future. It works well and I think that the features were thought through. I am most satisfied with the list making and the AI generated task request. It's working how I intended it to be.
 
 **b. What you would improve**
 
 - If you had another iteration, what would you improve or redesign?
 
+## Future Plans
+- make feature agentic workflow so it can check itself and fix itself in a loop
+- when generated response is rejected, AI will generate a new response (agentic)
+- show a monthly calender of all the tasks already scheduled
+- visually appealing list
+- visual calender
+- make owner info important? (depends on if this is used for personal or business)
+- be able to prompt for editing tasks
+- edit tasks on schedule. If completed, can press complete to remove from schedule and mark as complete on current tasks
+- find a way to schedule certain tasks without scheduling conflicts (ex: I want to schedule walks for my two dogs at the same time)
+- warn user of scheduling conflict beforehand?
+- make the shedule more interactive (currently just displaying)
+
 **c. Key takeaway**
 
 - What is one important thing you learned about designing systems or working with AI on this project?
+I learned how important it is to test your app and how long it could take to fix or change a feature in an app, especially done by AI, but also how fast it is compared to if I do it. I learned how important it is to know what you are designing or how you want your app to look or have when working with AI.
+
+
+
+
+
+
+
+
