@@ -102,11 +102,11 @@ Mermaid Diagram (using Claude)
 ## Getting started
 
 ### Setup
-
 ```bash
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+python3 -m pip install scikit-learn
 ```
 
 ### Suggested workflow
@@ -120,8 +120,8 @@ pip install -r requirements.txt
 6. Connect your logic to the Streamlit UI in `app.py`.
 7. Refine UML so it matches what you actually built.
 
-
-
+## Tradeoffs:
+Because the feature is RAG instead of agentic workflow, the program would not self-check itself
 
 
 ## "Testing PawPal++".

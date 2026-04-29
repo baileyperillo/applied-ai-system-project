@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import csv
 import numpy as np
 from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
 
 
 # -----------------------------------------------------------------------
@@ -436,6 +437,95 @@ class EmbeddingManager:
         np.save(self.embeddings_file, embeddings)
         
         print(f"✅ Updated embeddings: {len(decisions)} decisions, shape {embeddings.shape}")
+    
+    def load_embeddings(self) -> Tuple[np.ndarray, List[dict]]:
+        """Load embeddings and corresponding decisions from files.
+        
+        Returns:
+            Tuple of (embeddings_array, decisions_list)
+        """
+        try:
+            embeddings = np.load(self.embeddings_file)
+            decisions = self.load_decisions()
+            return embeddings, decisions
+        except FileNotFoundError:
+            return np.empty((0, self.model.get_sentence_embedding_dimension())), []
+    
+    def retrieve_similar_decisions(self, query: str, top_k: int = 3) -> List[dict]:
+        """Retrieve the top-k most similar past decisions for a given query.
+        
+        Uses cosine similarity to find decisions most similar to the query.
+        This is the core retrieval function for the RAG pipeline.
+        
+        Args:
+            query: The user's task request (e.g., "Schedule vet appointment for Mochi")
+            top_k: Number of similar decisions to return (default: 3)
+            
+        Returns:
+            List of top-k similar decision dictionaries, sorted by similarity (most similar first)
+        """
+        # Load current embeddings and decisions
+        embeddings, decisions = self.load_embeddings()
+        
+        if len(decisions) == 0 or len(embeddings) == 0:
+            return []
+        
+        # Generate embedding for the query
+        query_embedding = self.model.encode([query])[0]  # Shape: (embedding_dim,)
+        
+        # Compute cosine similarities between query and all stored embeddings
+        similarities = cosine_similarity([query_embedding], embeddings)[0]  # Shape: (num_decisions,)
+        
+        # Get indices of top-k most similar decisions
+        top_indices = np.argsort(similarities)[::-1][:top_k]  # Sort descending, take top_k
+        
+        # Return the corresponding decisions
+        similar_decisions = []
+        for idx in top_indices:
+            decision = decisions[idx].copy()
+            decision['similarity_score'] = float(similarities[idx])
+            similar_decisions.append(decision)
+        
+        return similar_decisions
+
+    def build_prompt(self, request: str, top_k: int = 3) -> str:
+        """Build a retrieval-augmented prompt using the top similar past decisions.
+        
+        This method injects the top-k retrieved examples into a prompt template,
+        grounding the agent's proposal in real prior decisions and outcomes.
+        """
+        similar_decisions = self.retrieve_similar_decisions(request, top_k=top_k)
+        prompt_lines = [
+            "You are a pet care planning assistant.",
+            "Use the examples below to generate a grounded task proposal:",
+            "",
+        ]
+
+        if similar_decisions:
+            for index, decision in enumerate(similar_decisions, start=1):
+                prompt_lines.append(f"Example {index}:")
+                prompt_lines.append(f"Request: {decision['request']}")
+                prompt_lines.append(f"Proposal: {decision['proposal']}")
+                prompt_lines.append(f"Outcome: {decision['outcome']}")
+                final_task = decision.get('final_task', '')
+                if final_task:
+                    prompt_lines.append(f"Final task: {final_task}")
+                prompt_lines.append(f"Similarity: {decision['similarity_score']:.3f}")
+                prompt_lines.append("")
+        else:
+            prompt_lines.append("No past decision examples are available yet.")
+            prompt_lines.append("")
+
+        prompt_lines.extend([
+            "Current task request:",
+            f"{request}",
+            "",
+            "Based on the examples above, propose a single grounded task plan for the current request.",
+            "Include a clear scheduling suggestion and a brief rationale.",
+            "Do not actually save the task until the user confirms.",
+        ])
+
+        return "\n".join(prompt_lines)
 
 
 @dataclass

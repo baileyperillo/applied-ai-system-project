@@ -84,3 +84,28 @@ logger.log_decision(
 )
 
 print("\n✅ Decision logging test completed!")
+
+# --- RETRIEVAL FUNCTION TEST ---
+print("\n🔍 TESTING RETRIEVAL FUNCTION...\n")
+
+from pawpal_system import EmbeddingManager
+
+# Create embedding manager for retrieval
+retriever = EmbeddingManager()
+
+# Test retrieval with a sample query
+test_query = "Schedule vet appointment for Mochi"
+print(f"Query: '{test_query}'")
+
+similar_decisions = retriever.retrieve_similar_decisions(test_query, top_k=3)
+
+print(f"\nTop 3 similar past decisions:")
+for i, decision in enumerate(similar_decisions, 1):
+    print(f"\n{i}. Similarity: {decision['similarity_score']:.3f}")
+    print(f"   Past Request: {decision['request']}")
+    print(f"   AI Proposal: {decision['proposal']}")
+    print(f"   User Outcome: {decision['outcome']}")
+    if decision['final_task']:
+        print(f"   Final Task: {decision['final_task']}")
+
+print("\n✅ Retrieval function test completed!")

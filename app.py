@@ -139,6 +139,97 @@ else:
 
 st.divider()
 
+st.subheader("🧠 AI-assisted task request")
+st.caption("Retrieve similar past decisions, build a grounded proposal, and confirm before saving any task.")
+
+if "embedding_manager" not in st.session_state:
+    st.session_state.embedding_manager = EmbeddingManager()
+if "decision_logger" not in st.session_state:
+    st.session_state.decision_logger = DecisionLogger()
+
+request_text = st.text_input("Describe the task request for AI guidance", value="Schedule grooming for Mochi", key="ai_task_request")
+
+if st.button("🔍 Build grounded proposal", key="build_proposal"):
+    st.session_state.ai_prompt = st.session_state.embedding_manager.build_prompt(request_text)
+    st.session_state.ai_proposal = f"Grounded task proposal for: {request_text}"
+    st.session_state.ai_final_task = request_text
+
+if "ai_prompt" in st.session_state and st.session_state.ai_prompt:
+    st.markdown("**Retrieved few-shot examples and grounded prompt:**")
+    st.code(st.session_state.ai_prompt, language="text")
+    st.markdown("**Proposed task summary:**")
+    st.write(st.session_state.ai_proposal)
+
+    edited_final_task = st.text_area(
+        "Edit the final task description before saving",
+        value=st.session_state.get("ai_final_task", request_text),
+        key="ai_final_task_text"
+    )
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("✅ Confirm and save task", key="confirm_task"):
+            if not edited_final_task.strip():
+                st.warning("Enter a final task description before confirming.")
+            else:
+                if st.session_state.pets:
+                    selected_pet = st.session_state.pets[0]["pet_obj"]
+                    new_task = Task(
+                        task_id=len(st.session_state.tasks) + 1,
+                        description=edited_final_task.strip(),
+                        duration=30,
+                        frequency="weekly",
+                        priority="medium",
+                    )
+                    selected_pet.add_task(new_task)
+                    st.session_state.tasks.append(
+                        {
+                            "pet": selected_pet.name,
+                            "description": new_task.description,
+                            "duration": new_task.duration,
+                            "frequency": new_task.frequency,
+                            "priority": new_task.priority,
+                        }
+                    )
+                    st.session_state.decision_logger.log_decision(
+                        request=request_text,
+                        proposal=st.session_state.ai_proposal,
+                        outcome="approved",
+                        final_task=edited_final_task.strip(),
+                    )
+                    st.success("✅ Task confirmed and added after review.")
+                else:
+                    st.warning("Add a pet first before confirming a task.")
+    with col2:
+        if st.button("❌ Reject proposal", key="reject_task"):
+            st.session_state.decision_logger.log_decision(
+                request=request_text,
+                proposal=st.session_state.ai_proposal,
+                outcome="rejected",
+                final_task="",
+            )
+            st.warning("Proposal rejected. No task was saved.")
+
+st.divider()
+
+st.subheader("🧠 AI Task Proposal")
+st.caption("Use past decision examples to ground a proposed task before confirming it.")
+
+if "embedding_manager" not in st.session_state:
+    st.session_state.embedding_manager = EmbeddingManager()
+
+request_text = st.text_input("Describe the task you want help with", value="Schedule vet appointment for Mochi")
+
+if st.button("Generate AI prompt"):
+    if request_text.strip():
+        augmented_prompt = st.session_state.embedding_manager.build_prompt(request_text)
+        st.markdown("**Prompt with retrieved context:**")
+        st.code(augmented_prompt, language="text")
+    else:
+        st.warning("⚠️ Enter a task request first.")
+
+st.divider()
+
 st.subheader("Build Schedule")
 st.caption("This button should call your scheduling logic once you implement it.")
 
