@@ -107,6 +107,7 @@ python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python3 -m pip install scikit-learn
+streamlit run app.py
 ```
 
 ### Suggested workflow
@@ -127,5 +128,42 @@ Because the feature is RAG instead of agentic workflow, the program would not se
 ## "Testing PawPal++".
 
 Summary of my tests: ...
+
+To Do List:
+[x] comment out AI Task Proposal (used for debugging)
+[x] remove prompt display in AI-Assisted Task Request
+[x] make sure new task that is confirmed is displayed on task list; tasks aren't added until I press on add task manually
+[x] make sure proposed task has time, date, duration, frequency, priority even without prompted
+[ ] make sure AI runs again if task is rejected
+Think about if the reject should do anything: just record response or change something?
+[ ] fix or remove the number of tasks in manage pets
+[x] add a way to delete/ edit tasks in "Current Tasks" or "Schedule"
+[x]add colors on the scheduling conflicts
+[ ] mark tasks as completed. They should delete after in schedule but be labeled as complete on "Current Tasks" list
+[ ] add colors or symbols to priority
+
+## Problems
+- generated task isn't specific - no time or date
+- generated task won't show in task list once confirmed
+- nothing happens after generated task is rejected; should propose again
+- start time is not input by user so there will always be scheduling conflicts
+- if I add another task in the AI Task proposal, it would not show in the to edit text box
+- rejected first generated response then tried again. Gave same response
+- generating new task after not rejecting or confirming old task will keep old task
+
+
+## Future Plans
+- make feature agentic workflow so it can check itself and fix itself in a loop
+- when generated response is rejected, AI will generate a new response (agentic)
+- show a monthly calender of all the tasks already scheduled
+- visually appealing list
+- visual calender
+- make owner info important? (depends on if this is used for personal or business)
+- be able to prompt for editing tasks
+- edit tasks on schedule. If completed, can press complete to remove from schedule and mark as complete on current tasks
+- find a way to schedule certain tasks without scheduling conflicts (ex: I want to schedule walks for my two dogs at the same time)
+- warn user of scheduling conflict beforehand?
+- make the shedule more interactive
+
 
 

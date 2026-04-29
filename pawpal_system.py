@@ -6,7 +6,9 @@ from dataclasses import dataclass, field
 from typing import Optional, List, Tuple
 from datetime import datetime, timedelta
 import csv
+import json
 import numpy as np
+import anthropic
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -526,6 +528,75 @@ class EmbeddingManager:
         ])
 
         return "\n".join(prompt_lines)
+
+    def generate_task_proposal(self, request: str, existing_tasks: List = None) -> dict:
+        """Call Claude to generate a structured task proposal grounded in past decisions.
+
+        Returns a dict with keys: description, time, date, frequency, duration, priority, rationale.
+        """
+        today = datetime.now().strftime("%Y-%m-%d")
+        similar_decisions = self.retrieve_similar_decisions(request, top_k=3)
+
+        approved, rejected = [], []
+        for d in similar_decisions:
+            (approved if d.get("outcome") == "approved" else rejected).append(d)
+
+        approved_section = "\n".join(
+            f"- Request: {d['request']} | Final task: {d.get('final_task', '')}"
+            for d in approved
+        ) or "None."
+
+        rejected_section = "\n".join(
+            f"- Request: {d['request']} | Rejected proposal: {d.get('proposal', '')}"
+            for d in rejected
+        ) or "None."
+
+        task_lines = []
+        if existing_tasks:
+            for t in existing_tasks:
+                task_lines.append(
+                    f"- {t.description} at {t.time}, {t.duration} min, {t.frequency}, {t.priority} priority"
+                )
+        tasks_section = "\n".join(task_lines) if task_lines else "No existing tasks."
+
+        prompt = f"""Today is {today}.
+
+Previously APPROVED proposals (use these as positive examples):
+{approved_section}
+
+Previously REJECTED proposals (do NOT repeat these — propose something meaningfully different in time, frequency, or approach):
+{rejected_section}
+
+Already scheduled tasks (choose a time that does not conflict):
+{tasks_section}
+
+User request: {request}
+
+Respond with ONLY a valid JSON object — no markdown, no explanation, no extra text:
+{{
+  "description": "clear task name",
+  "time": "HH:MM",
+  "date": "YYYY-MM-DD",
+  "frequency": "daily or weekly or monthly",
+  "duration": <integer minutes>,
+  "priority": "low or medium or high",
+  "rationale": "one sentence explaining your scheduling choices"
+}}"""
+
+        client = anthropic.Anthropic()
+        message = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=512,
+            system="You are a pet care scheduling assistant. Always respond with valid JSON only.",
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        raw = message.content[0].text.strip()
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        return json.loads(raw.strip())
 
 
 @dataclass
