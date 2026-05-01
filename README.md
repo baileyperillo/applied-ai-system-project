@@ -5,7 +5,7 @@
 
 ## Summary
 
-PawPal+ just got an update. Introducting **PawPal++**, where along with being able to schedule pet care tasks, you can also ask the built in AI to do it for you. The AI uses RAG to look through your previous history of tasks to find you the perfect time to do a task, like scheduling vet appointments or giving your pet their medication. If you want to spend less time looking at your calender, this is the tool you need
+PawPal+ just got an update. Introducing **PawPal++**, where along with being able to schedule pet care tasks, you can also ask the built in AI to do it for you. The AI uses RAG to look through your previous history of tasks to find you the perfect time to do a task, like scheduling vet appointments or giving your pet their medication. If you want to spend less time looking at your calender, this is the tool you need
 
 
 ## Scenario
