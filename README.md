@@ -8,6 +8,8 @@ PawPal+ just got an update. Introducting **PawPal++**, where along with being ab
 
 Demo Walkthrough (no sound)
 <video controls src="Screen Recording 2026-04-29 at 6.33.25 AM.mov" title="Title"></video>
+https://github.com/baileyperillo/applied-ai-system-project/releases/download/v2.1.0/Screen.Recording.2026-04-29.at.6.33.25.AM.mov
+
 PawPal+ just got an update. Introducing **PawPal++**, where along with being able to schedule pet care tasks, you can also ask the built in AI to do it for you. The AI uses RAG to look through your previous history of tasks to find you the perfect time to do a task, like scheduling vet appointments or giving your pet their medication. If you want to spend less time looking at your calender, this is the tool you need
 
 
@@ -91,11 +93,11 @@ To Do List:
 [x] remove prompt display in AI-Assisted Task Request
 [x] make sure new task that is confirmed is displayed on task list; tasks aren't added until I press on add task manually
 [x] make sure proposed task has time, date, duration, frequency, priority even without prompted
-[ ] make sure AI runs again if task is rejected --Think about if the reject should do anything: just record response or change something?
-[ ] fix or remove the number of tasks in manage pets (not updating) -- fixed
+[x] make sure AI runs again if task is rejected --Think about if the reject should do anything: just record response or change something?
+[x] fix or remove the number of tasks in manage pets (not updating) -- fixed
 [x] add a way to delete/ edit tasks in "Current Tasks" or "Schedule"
 [x]add colors on the scheduling conflicts
 [x] mark tasks as completed. They could delete after in schedule but be labeled as complete on "Current Tasks" list
-[ ] add colors or symbols to priority
+[x] add colors or symbols to priority
 
 
