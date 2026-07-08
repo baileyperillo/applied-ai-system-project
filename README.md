@@ -4,12 +4,25 @@
 
 
 ## Summary
+PawPal+ just got an update. Introducting **PawPal++**, where along with being able to schedule pet care tasks, you can also ask the built in AI to do it for you. The AI uses RAG to look through your previous history of tasks to find you the perfect time to do a task, like scheduling vet appointments or giving your pet their medication. If you want to spend less time looking at your calender, this is the tool you need.
 
+Demo Walkthrough (no sound)
+<video controls src="Screen Recording 2026-04-29 at 6.33.25 AM.mov" title="Title"></video>
 PawPal+ just got an update. Introducing **PawPal++**, where along with being able to schedule pet care tasks, you can also ask the built in AI to do it for you. The AI uses RAG to look through your previous history of tasks to find you the perfect time to do a task, like scheduling vet appointments or giving your pet their medication. If you want to spend less time looking at your calender, this is the tool you need
 
 
-## Scenario
+## New Project Summary
+The final app after updates should:
 
+ - User can enter a task they want on their schedule
+ - Execution gardrail: make AI ask for confirmation before implementing task
+
+ This is important and really good feature because a lot of people wouldn't want to make the time to schedule small tasks or they forget to make and schedule tasks at the moment. If they have a way to automate the task, especially if the task repeats, like medication or such, it would be great to do that!
+
+ Application allows user to create add their pet name and species, and then create tasks, edit, and remove tasks for each pet. Application also allows user to make a request to create a task. Application will look through data of past tasks to find and suggest the best available date for task. The user will then confirm or decline the suggested date and time of task. If confirmed, the task will officially be added. If declined the application will try again.
+
+
+## Scene
 A busy pet owner needs help staying consistent with pet care. They want an assistant that can:
 
 - Track pet care tasks (walks, feeding, meds, enrichment, grooming, etc.)
@@ -26,15 +39,6 @@ Your final app should:
 - Display the plan clearly (and ideally explain the reasoning)
 - Include tests for the most important scheduling behaviors
 
-## New Project Summary
-The final app after updates should:
-
- - User can enter a task they want on their schedule
- - Execution gardrail: make AI ask for confirmation before implementing task
-
- This is important and really good feature because a lot of people wouldn't want to make the time to schedule small tasks or they forget to make and schedule tasks at the moment. If they have a way to automate the task, especially if the task repeats, like medication or such, it would be great to do that!
-
- Application allows user to create add their pet name and species, and then create tasks, edit, and remove tasks for each pet. Application also allows user to make a request to create a task. Application will look through data of past tasks to find and suggest the best available date for task. The user will then confirm or decline the suggested date and time of task. If confirmed, the task will officially be added. If declined the application will try again.
 
 
  ## Architecture Overview

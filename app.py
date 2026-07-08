@@ -7,18 +7,50 @@ from pawpal_system import Task, Pet, Owner, Scheduler, DecisionLogger, Embedding
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
 
+# st.markdown(
+#     """
+#     <style>
+#     .stApp {
+#         background-color: #F5B15D;
+#     }
+#     div[data-testid="stExpander"] {
+#         border: 2px solid rgba(0,0,0,0.25) !important;
+#         border-radius: 0.5rem;
+#     }
+#     div[data-testid="stVerticalBlockBorderWrapper"] > div {
+#         border: 2px solid rgba(0,0,0,0.25) !important;
+#         border-radius: 0.5rem;
+#     }
+#     </style>
+#     """,
+#     unsafe_allow_html=True,
+# )
+
 st.title("🐾 PawPal+")
 
 st.markdown(
     """
-Welcome to the PawPal+ starter app.
+    **Welcome to the PawPal++ (New and Improved)!**
 
-This file is intentionally thin. It gives you a working Streamlit app so you can start quickly,
-but **it does not implement the project logic**. Your job is to design the system and build it.
+    The perfect assistant to help you plan and manage care for your beloved pets.
 
-Use this app as your interactive demo once your backend classes/functions exist.
-"""
+    This app is a starting point for building a pet care scheduling system that can handle tasks, priorities, and even AI-assisted suggestions.
+    Just add your pets and tasks, and let PawPal+ help you keep everything organized and on track. 
+    You can also ask for AI suggestions on how to schedule new tasks based on your existing routine and past decisions.
+    All of it will be displayed on a schedule. You can edit or mark tasks whenever you want.
+    """
 )
+
+# st.markdown(
+#     """
+# Welcome to the PawPal+ starter app.
+
+# This file is intentionally thin. It gives you a working Streamlit app so you can start quickly,
+# but **it does not implement the project logic**. Your job is to design the system and build it.
+
+# Use this app as your interactive demo once your backend classes/functions exist.
+# """
+# )
 
 with st.expander("Scenario", expanded=True):
     st.markdown(
@@ -38,6 +70,7 @@ At minimum, your system should:
 - Represent the pet and the owner (basic info and preferences)
 - Build a plan/schedule for a day that chooses and orders tasks based on constraints
 - Explain the plan (why each task was chosen and when it happens)
+- **AI applied systems project: Extend it to a fully applied AI System**
 """
     )
 
@@ -278,6 +311,9 @@ else:
 
 request_text = st.text_input("Describe the task request for AI guidance", value="Schedule grooming for Mochi", key="ai_task_request")
 
+if "proposal_count" not in st.session_state:
+    st.session_state.proposal_count = 0
+
 if st.button("🔍 Build grounded proposal", key="build_proposal"):
     if not ai_selected_pet:
         st.warning("Add a pet first.")
@@ -291,37 +327,39 @@ if st.button("🔍 Build grounded proposal", key="build_proposal"):
                 )
                 st.session_state.ai_task_fields = fields
                 st.session_state.ai_proposal = json.dumps(fields)
+                st.session_state.proposal_count += 1
             except Exception as e:
                 st.error(f"Failed to generate proposal: {e}")
 
 if st.session_state.get("ai_task_fields"):
     fields = st.session_state.ai_task_fields
+    pc = st.session_state.proposal_count
     st.markdown("**Proposed task:**")
     st.info(fields.get("rationale", ""))
 
     col1, col2 = st.columns(2)
     with col1:
-        prop_description = st.text_input("Description", value=fields.get("description", request_text), key="prop_desc")
+        prop_description = st.text_input("Description", value=fields.get("description", request_text), key=f"prop_desc_{pc}")
         prop_frequency = st.selectbox(
             "Frequency", ["daily", "weekly", "monthly"],
             index=["daily", "weekly", "monthly"].index(fields.get("frequency", "weekly")),
-            key="prop_freq",
+            key=f"prop_freq_{pc}",
         )
         prop_priority = st.selectbox(
             "Priority", ["low", "medium", "high"],
             index=["low", "medium", "high"].index(fields.get("priority", "medium")),
-            key="prop_priority",
+            key=f"prop_priority_{pc}",
         )
     with col2:
-        prop_time = st.text_input("Time (HH:MM)", value=fields.get("time", "09:00"), key="prop_time")
+        prop_time = st.text_input("Time (HH:MM)", value=fields.get("time", "09:00"), key=f"prop_time_{pc}")
         try:
             prop_date_default = dt.date.fromisoformat(fields.get("date", str(dt.date.today())))
         except ValueError:
             prop_date_default = dt.date.today()
-        prop_date = st.date_input("Date", value=prop_date_default, key="prop_date")
+        prop_date = st.date_input("Date", value=prop_date_default, key=f"prop_date_{pc}")
         prop_duration = st.number_input(
             "Duration (minutes)", min_value=1, max_value=240,
-            value=max(1, min(240, int(fields.get("duration", 30)))), key="prop_duration",
+            value=max(1, min(240, int(fields.get("duration", 30)))), key=f"prop_duration_{pc}",
         )
 
     col1, col2 = st.columns(2)
@@ -358,7 +396,7 @@ if st.session_state.get("ai_task_fields"):
                         final_task=prop_description.strip(),
                     )
                     st.session_state.ai_task_fields = None
-                    st.success("✅ Task confirmed and added.")
+                    st.session_state.task_added_msg = prop_description.strip()
                     st.rerun()
                 except ValueError:
                     st.error("Invalid time format. Use HH:MM (e.g. 09:00).")
@@ -374,6 +412,10 @@ if st.session_state.get("ai_task_fields"):
             )
             st.session_state.ai_task_fields = None
             st.warning("Proposal rejected. No task was saved.")
+
+if st.session_state.get("task_added_msg"):
+    st.success(f"✅ \"{st.session_state.task_added_msg}\" was added to your Current Tasks.")
+    del st.session_state["task_added_msg"]
 
 st.divider()
 
